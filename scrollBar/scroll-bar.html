@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>scroll-bar</title>
+  <style type="text/css">
+    * {margin: 0;padding: 0;}
+    body {height: 3000px;}
+    #scroll_box {width: 940px;height: 300px;border: 25px solid #c9d5fd;box-shadow: 0 0 20px #999999;border-radius: 10px;margin: 600px auto;background-color: #c9d5fd;position: relative;overflow: hidden;}
+    #scroll_box #scroll_content {width: 900px;position: absolute;top: 0;left: 0;}
+    #scroll_box #scroll_content .test1 {width: 100%;height: 250px;background-color: red;}
+    #scroll_box #scroll_content .test2 {width: 100%;height: 250px;background-color: blue;}
+    #scroll_box #scroll_content .test3 {width: 100%;height: 250px;background-color: yellow;}
+    #scroll_box #scroll_content .test4 {width: 100%;height: 250px;background-color: green;}
+    #scroll_box #scroll_bar {width: 6px;height: 250px;position: absolute;top: 0;bottom: 0;margin: auto;right: 15px;background-color: #97a6db;border-radius: 2px;z-index: 1;}
+    #scroll_box #scroll_bar #scroll_step {width: 6px;height: 0px;background-color: #5f82ff;}
+    #scroll_box #scroll_bar #scroll_btn {width: 12px;height: 12px;background-color: #ffffff;border-radius: 50%;position: absolute;top: -6px;left: -3px;z-index: 2;cursor: pointer;}
+  </style>
+</head>
+<body>
+  <div id="scroll_box">
+    <div id="scroll_content">
+      <div class="test1"></div>
+      <div class="test2"></div>
+      <div class="test3"></div>
+      <div class="test4"></div>
+    </div>
+    <div id="scroll_bar">
+      <div id="scroll_step"></div>
+      <div id="scroll_btn"></div>
+    </div>
+  </div>
+</body>
+<script>
+  scrollBar = function (conf) {
+    this.box = document.getElementById(conf.box) || document.getElementById('scroll_box');
+    this.content = document.getElementById(conf.content) || document.getElementById('scroll_content');
+    this.bar = document.getElementById(conf.bar) || document.getElementById('scroll_bar');
+    this.btn = document.getElementById(conf.btn) || document.getElementById('scroll_btn');
+    this.step = document.getElementById(conf.step) || document.getElementById('scroll_step');
+    this.speed = conf.speed || 20;
+    this.init();
+  }
+  scrollBar.prototype = {
+    init: function () {
+      var s = this;
+      var min = (s.box.offsetHeight - 50) / s.content.offsetHeight * s.bar.offsetHeight;
+      var max = s.bar.offsetHeight;
+      s.btn.style.top = (min - 6) + 'px';
+      s.step.style.height = min + 'px';
+      s.mouseDrag(min,max);
+      s.wheelRoll(min,max);
+    },
+    mouseDrag: function (min,max) {
+      var s = this;
+      s.btn.onmousedown = function (e) {
+        var y = (e || window.event).clientY;
+        var t = this.offsetTop;
+        document.onmousemove = function (e) {
+          var thisY = (e || window.event).clientY;
+          var to = Math.min(max - 6,Math.max(min - 6,t + (thisY - y)));
+          s.btn.style.top = to + 'px';
+          s.step.style.height = (to + 6) + 'px';
+          if ((thisY - y) > 0) {
+            var pos = Math.min(1,((to + 6 - min) / (max - min)));
+          } else {
+            var pos = Math.max(-1,((to + 6 - min) / (max - min)));
+          }
+          s.contentRoll(pos);
+          window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty();
+        }
+        document.onmouseup = function () {
+          this.onmousemove = null;
+        }
+      }
+    },
+    wheelRoll: function (min,max) {
+      var s = this;
+      window.onmousewheel = function (e) {
+        // console.log(e);
+        for (var i = 0; i < (e.path.length - 2); i++) {
+          if (e.path[i].getAttribute('id') === 'scroll_box') {
+            if (e.deltaY > 0) {
+              if ((parseInt(s.step.style.height) < max)) {
+                if (e.stopPropagation) e.stopPropagation();
+                else e.cancelBubble = true;
+                if (e.preventDefault) e.preventDefault();
+                else e.returnValue = false;
+                if (parseInt(s.step.style.height) + s.speed >= max) {
+                  s.step.style.height = max + 'px';
+                  s.btn.style.top = (max - 6) + 'px';
+                } else {
+                  s.step.style.height = (parseInt(s.step.style.height) + s.speed) + 'px';
+                  s.btn.style.top = (parseInt(s.btn.style.top) + s.speed) + 'px';
+                }
+              }
+              var pos = Math.min(1,((parseInt(s.step.style.height) - min) / (max - min)));
+            } else {
+              if ((parseInt(s.step.style.height) > min)) {
+                if (e.stopPropagation) e.stopPropagation();
+                else e.cancelBubble = true;
+                if (e.preventDefault) e.preventDefault();
+                else e.returnValue = false;
+                if (parseInt(s.step.style.height) - s.speed <= min) {
+                  s.step.style.height = min + 'px';
+                  s.btn.style.top = (min - 6) + 'px';
+                } else {
+                  s.step.style.height = (parseInt(s.step.style.height) - s.speed) + 'px';
+                  s.btn.style.top = (parseInt(s.btn.style.top) - s.speed) + 'px';
+                }
+              }
+              var pos = Math.max(-1,((parseInt(s.step.style.height) - min) / (max - min)));
+            }
+            s.contentRoll(pos);
+          }
+        }
+      }
+    },
+    contentRoll: function (pos) {
+      var s = this;
+      s.content.style.top = (-(s.content.offsetHeight - (s.box.offsetHeight - 50)) * pos) + 'px';
+    }
+  }
+  var scroll_bar = new scrollBar({
+    // speed: 10 // 滚动速度
+  });
+</script>
+</html>
