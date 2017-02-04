@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>scroll-bar</title>
   <style type="text/css">
     * {margin: 0;padding: 0;}
@@ -19,10 +20,13 @@
 <body>
   <div id="scroll_box">
     <div id="scroll_content">
-      <div class="test1"></div>
-      <div class="test2"></div>
-      <div class="test3"></div>
-      <div class="test4"></div>
+      <div class="test1 scroll_blur"></div>
+      <div class="test2 scroll_blur"></div>
+      <div class="test3 scroll_blur"></div>
+      <div class="test4 scroll_blur"></div>
+      <div class="test4 scroll_blur"></div>
+      <div class="test4 scroll_blur"></div>
+      <div class="test4 scroll_blur"></div>
     </div>
     <div id="scroll_bar">
       <div id="scroll_step"></div>
@@ -38,6 +42,12 @@
     this.btn = document.getElementById(conf.btn) || document.getElementById('scroll_btn');
     this.step = document.getElementById(conf.step) || document.getElementById('scroll_step');
     this.speed = conf.speed || 20;
+    this.idArr = [];
+    this.idArr[0] = conf.box || 'scroll_box';
+    this.idArr[1] = conf.content || 'scroll_content';
+    this.idArr[2] = conf.bar || 'scroll_bar';
+    this.idArr[3] = conf.btn || 'scroll_btn';
+    this.idArr[4] = conf.step || 'scroll_step';
     this.init();
   }
   scrollBar.prototype = {
@@ -48,15 +58,20 @@
       s.btn.style.top = (min - 6) + 'px';
       s.step.style.height = min + 'px';
       s.mouseDrag(min,max);
-      s.wheelRoll(min,max);
+      if (window.addEventListener) window.addEventListener('DOMMouseScroll', function (event) {
+        s.wheelRoll(min,max,event);
+      }, false);
+      window.onmousewheel = function (event) {
+        s.wheelRoll(min,max,event);
+      }
     },
     mouseDrag: function (min,max) {
       var s = this;
-      s.btn.onmousedown = function (e) {
-        var y = (e || window.event).clientY;
+      s.btn.onmousedown = function (event) {
+        var y = (event || window.event).clientY;
         var t = this.offsetTop;
-        document.onmousemove = function (e) {
-          var thisY = (e || window.event).clientY;
+        document.onmousemove = function (event) {
+          var thisY = (event || window.event).clientY;
           var to = Math.min(max - 6,Math.max(min - 6,t + (thisY - y)));
           s.btn.style.top = to + 'px';
           s.step.style.height = (to + 6) + 'px';
@@ -73,46 +88,50 @@
         }
       }
     },
-    wheelRoll: function (min,max) {
+    wheelRoll: function (min,max,event) {
       var s = this;
-      window.onmousewheel = function (e) {
-        // console.log(e);
-        for (var i = 0; i < (e.path.length - 2); i++) {
-          if (e.path[i].getAttribute('id') === 'scroll_box') {
-            if (e.deltaY > 0) {
-              if ((parseInt(s.step.style.height) < max)) {
-                if (e.stopPropagation) e.stopPropagation();
-                else e.cancelBubble = true;
-                if (e.preventDefault) e.preventDefault();
-                else e.returnValue = false;
-                if (parseInt(s.step.style.height) + s.speed >= max) {
-                  s.step.style.height = max + 'px';
-                  s.btn.style.top = (max - 6) + 'px';
-                } else {
-                  s.step.style.height = (parseInt(s.step.style.height) + s.speed) + 'px';
-                  s.btn.style.top = (parseInt(s.btn.style.top) + s.speed) + 'px';
-                }
-              }
-              var pos = Math.min(1,((parseInt(s.step.style.height) - min) / (max - min)));
+      var delta = 0;
+      event = event || window.event;
+      if (event.wheelDelta) {
+        delta = event.wheelDelta;
+        if (window.opera) delta = -delta;
+      } else if (event.detail) {
+        delta = -event.detail;
+      }
+      console.log((event.target.getAttribute('id')));
+      if ((event.target.getAttribute('class') && (event.target.getAttribute('class')).indexOf('scroll_blur') >= 0) || (event.target.getAttribute('id') && (s.idArr.indexOf(event.target.getAttribute('id')) >= 0))) {
+        if (delta < 0) {
+          if ((parseInt(s.step.style.height) < max)) {
+            if (event.stopPropagation) event.stopPropagation();
+            else event.cancelBubble = true;
+            if (event.preventDefault) event.preventDefault();
+            else event.returnValue = false;
+            if (parseInt(s.step.style.height) + s.speed >= max) {
+              s.step.style.height = max + 'px';
+              s.btn.style.top = (max - 6) + 'px';
             } else {
-              if ((parseInt(s.step.style.height) > min)) {
-                if (e.stopPropagation) e.stopPropagation();
-                else e.cancelBubble = true;
-                if (e.preventDefault) e.preventDefault();
-                else e.returnValue = false;
-                if (parseInt(s.step.style.height) - s.speed <= min) {
-                  s.step.style.height = min + 'px';
-                  s.btn.style.top = (min - 6) + 'px';
-                } else {
-                  s.step.style.height = (parseInt(s.step.style.height) - s.speed) + 'px';
-                  s.btn.style.top = (parseInt(s.btn.style.top) - s.speed) + 'px';
-                }
-              }
-              var pos = Math.max(-1,((parseInt(s.step.style.height) - min) / (max - min)));
+              s.step.style.height = (parseInt(s.step.style.height) + s.speed) + 'px';
+              s.btn.style.top = (parseInt(s.btn.style.top) + s.speed) + 'px';
             }
-            s.contentRoll(pos);
           }
+          var pos = Math.min(1,((parseInt(s.step.style.height) - min) / (max - min)));
+        } else {
+          if ((parseInt(s.step.style.height) > min)) {
+            if (event.stopPropagation) event.stopPropagation();
+            else event.cancelBubble = true;
+            if (event.preventDefault) event.preventDefault();
+            else event.returnValue = false;
+            if (parseInt(s.step.style.height) - s.speed <= min) {
+              s.step.style.height = min + 'px';
+              s.btn.style.top = (min - 6) + 'px';
+            } else {
+              s.step.style.height = (parseInt(s.step.style.height) - s.speed) + 'px';
+              s.btn.style.top = (parseInt(s.btn.style.top) - s.speed) + 'px';
+            }
+          }
+          var pos = Math.max(-1,((parseInt(s.step.style.height) - min) / (max - min)));
         }
+        s.contentRoll(pos);
       }
     },
     contentRoll: function (pos) {
