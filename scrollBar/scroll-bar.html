@@ -5,13 +5,14 @@
   <title>scroll-bar</title>
   <style type="text/css">
     * {margin: 0;padding: 0;}
-    body {height: 3000px;}
-    #scroll_box {width: 940px;height: 300px;border: 25px solid #c9d5fd;box-shadow: 0 0 20px #999999;border-radius: 10px;margin: 600px auto;background-color: #c9d5fd;position: relative;overflow: hidden;}
-    #scroll_box #scroll_content {width: 900px;position: absolute;top: 0;left: 0;}
-    #scroll_box #scroll_content .test1 {width: 100%;height: 250px;background-color: red;}
-    #scroll_box #scroll_content .test2 {width: 100%;height: 250px;background-color: blue;}
-    #scroll_box #scroll_content .test3 {width: 100%;height: 250px;background-color: yellow;}
-    #scroll_box #scroll_content .test4 {width: 100%;height: 250px;background-color: green;}
+    body {height: 1000px;}
+    #scroll_box {width: 940px;height: 300px;border: 25px solid #c9d5fd;box-shadow: 0 0 20px #999999;border-radius: 10px;margin: 600px auto;background-color: #c9d5fd;position: relative;}
+    #scroll_box #scroll_window {width: 900px;height: 300px;position: relative;overflow: hidden;}
+    #scroll_box #scroll_window #scroll_content {width: 900px;position: absolute;top: 0;left: 0;}
+    #scroll_box #scroll_window #scroll_content .test1 {width: 100%;height: 250px;background-color: red;}
+    #scroll_box #scroll_window #scroll_content .test2 {width: 100%;height: 250px;background-color: blue;}
+    #scroll_box #scroll_window #scroll_content .test3 {width: 100%;height: 250px;background-color: yellow;}
+    #scroll_box #scroll_window #scroll_content .test4 {width: 100%;height: 250px;background-color: green;}
     #scroll_box #scroll_bar {width: 6px;height: 250px;position: absolute;top: 0;bottom: 0;margin: auto;right: 15px;background-color: #97a6db;border-radius: 2px;z-index: 1;}
     #scroll_box #scroll_bar #scroll_step {width: 6px;height: 0px;background-color: #5f82ff;}
     #scroll_box #scroll_bar #scroll_btn {width: 12px;height: 12px;background-color: #ffffff;border-radius: 50%;position: absolute;top: -6px;left: -3px;z-index: 2;cursor: pointer;}
@@ -19,14 +20,20 @@
 </head>
 <body>
   <div id="scroll_box">
-    <div id="scroll_content">
-      <div class="test1 scroll_blur"></div>
-      <div class="test2 scroll_blur"></div>
-      <div class="test3 scroll_blur"></div>
-      <div class="test4 scroll_blur"></div>
-      <div class="test4 scroll_blur"></div>
-      <div class="test4 scroll_blur"></div>
-      <div class="test4 scroll_blur"></div>
+  	<div id="scroll_window">
+	    <div id="scroll_content">
+	      <div class="test1 scroll_blur"></div>
+	      <div class="test2 scroll_blur"></div>
+	      <div class="test3 scroll_blur"></div>
+	      <div class="test4 scroll_blur"></div>
+	      <div class="test4 scroll_blur"></div>
+	      <div class="test4 scroll_blur"></div>
+	      <div class="test4 scroll_blur"></div>
+	      <div class="test3 scroll_blur"></div>
+	      <div class="test4 scroll_blur"></div>
+	      <div class="test3 scroll_blur"></div>
+	      <div class="test4 scroll_blur"></div>
+	    </div>
     </div>
     <div id="scroll_bar">
       <div id="scroll_step"></div>
@@ -37,6 +44,7 @@
 <script>
   scrollBar = function (conf) {
     this.box = document.getElementById(conf.box) || document.getElementById('scroll_box');
+    this.window = document.getElementById(conf.window) || document.getElementById('scroll_window');
     this.content = document.getElementById(conf.content) || document.getElementById('scroll_content');
     this.bar = document.getElementById(conf.bar) || document.getElementById('scroll_bar');
     this.btn = document.getElementById(conf.btn) || document.getElementById('scroll_btn');
@@ -44,41 +52,45 @@
     this.speed = conf.speed || 20;
     this.idArr = [];
     this.idArr[0] = conf.box || 'scroll_box';
-    this.idArr[1] = conf.content || 'scroll_content';
-    this.idArr[2] = conf.bar || 'scroll_bar';
-    this.idArr[3] = conf.btn || 'scroll_btn';
-    this.idArr[4] = conf.step || 'scroll_step';
+    this.idArr[1] = conf.window || 'scroll_window';
+    this.idArr[2] = conf.content || 'scroll_content';
+    this.idArr[3] = conf.bar || 'scroll_bar';
+    this.idArr[4] = conf.btn || 'scroll_btn';
+    this.idArr[5] = conf.step || 'scroll_step';
     this.init();
   }
   scrollBar.prototype = {
     init: function () {
       var s = this;
-      var min = (s.box.offsetHeight - 50) / s.content.offsetHeight * s.bar.offsetHeight;
+      var min = s.window.offsetHeight / s.content.offsetHeight * s.bar.offsetHeight;
       var max = s.bar.offsetHeight;
-      s.btn.style.top = (min - 6) + 'px';
+      var halfBtn = s.btn.offsetHeight / 2;
+      s.btn.style.top = (min - halfBtn) + 'px';
       s.step.style.height = min + 'px';
-      s.mouseDrag(min,max);
-      if (window.addEventListener) window.addEventListener('DOMMouseScroll', function (event) {
-        s.wheelRoll(min,max,event);
-      }, false);
-      window.onmousewheel = function (event) {
-        s.wheelRoll(min,max,event);
+      s.mouseDrag(min,max,halfBtn);
+      if (window.addEventListener) {
+      	window.addEventListener('DOMMouseScroll', function (event) {
+        	s.wheelRoll(min,max,event,halfBtn);
+      	}, false);
+      }
+      document.onmousewheel = function (event) {
+        s.wheelRoll(min,max,event,halfBtn);
       }
     },
-    mouseDrag: function (min,max) {
+    mouseDrag: function (min,max,halfBtn) {
       var s = this;
       s.btn.onmousedown = function (event) {
         var y = (event || window.event).clientY;
         var t = this.offsetTop;
         document.onmousemove = function (event) {
           var thisY = (event || window.event).clientY;
-          var to = Math.min(max - 6,Math.max(min - 6,t + (thisY - y)));
+          var to = Math.min(max - halfBtn,Math.max(min - halfBtn,t + (thisY - y)));
           s.btn.style.top = to + 'px';
-          s.step.style.height = (to + 6) + 'px';
+          s.step.style.height = (to + halfBtn) + 'px';
           if ((thisY - y) > 0) {
-            var pos = Math.min(1,((to + 6 - min) / (max - min)));
+            var pos = Math.min(1,((to + halfBtn - min) / (max - min)));
           } else {
-            var pos = Math.max(-1,((to + 6 - min) / (max - min)));
+            var pos = Math.max(-1,((to + halfBtn - min) / (max - min)));
           }
           s.contentRoll(pos);
           window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty();
@@ -88,9 +100,10 @@
         }
       }
     },
-    wheelRoll: function (min,max,event) {
+    wheelRoll: function (min,max,event,halfBtn) {
       var s = this;
       var delta = 0;
+      var target;
       event = event || window.event;
       if (event.wheelDelta) {
         delta = event.wheelDelta;
@@ -98,8 +111,12 @@
       } else if (event.detail) {
         delta = -event.detail;
       }
-      console.log((event.target.getAttribute('id')));
-      if ((event.target.getAttribute('class') && (event.target.getAttribute('class')).indexOf('scroll_blur') >= 0) || (event.target.getAttribute('id') && (s.idArr.indexOf(event.target.getAttribute('id')) >= 0))) {
+      if (event.target) {
+      	target = event.target;
+      } else {
+      	target = event.srcElement;
+      }
+      if ((target.getAttribute('class') && (target.getAttribute('class')).indexOf('scroll_blur') >= 0) || (target.getAttribute('id') && (s.idArr.indexOf(target.getAttribute('id')) >= 0))) {
         if (delta < 0) {
           if ((parseInt(s.step.style.height) < max)) {
             if (event.stopPropagation) event.stopPropagation();
@@ -108,7 +125,7 @@
             else event.returnValue = false;
             if (parseInt(s.step.style.height) + s.speed >= max) {
               s.step.style.height = max + 'px';
-              s.btn.style.top = (max - 6) + 'px';
+              s.btn.style.top = (max - halfBtn) + 'px';
             } else {
               s.step.style.height = (parseInt(s.step.style.height) + s.speed) + 'px';
               s.btn.style.top = (parseInt(s.btn.style.top) + s.speed) + 'px';
@@ -123,24 +140,24 @@
             else event.returnValue = false;
             if (parseInt(s.step.style.height) - s.speed <= min) {
               s.step.style.height = min + 'px';
-              s.btn.style.top = (min - 6) + 'px';
+              s.btn.style.top = (min - halfBtn) + 'px';
             } else {
               s.step.style.height = (parseInt(s.step.style.height) - s.speed) + 'px';
               s.btn.style.top = (parseInt(s.btn.style.top) - s.speed) + 'px';
             }
           }
-          var pos = Math.max(-1,((parseInt(s.step.style.height) - min) / (max - min)));
+          var pos = Math.max(0,((parseInt(s.step.style.height) - min) / (max - min)));
         }
         s.contentRoll(pos);
       }
     },
     contentRoll: function (pos) {
       var s = this;
-      s.content.style.top = (-(s.content.offsetHeight - (s.box.offsetHeight - 50)) * pos) + 'px';
+      s.content.style.top = (-(s.content.offsetHeight - s.window.offsetHeight) * pos) + 'px';
     }
   }
   var scroll_bar = new scrollBar({
-    // speed: 10 // 滚动速度
+    speed: 10 // 滚动速度
   });
 </script>
 </html>
