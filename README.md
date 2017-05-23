@@ -1,3 +1,7 @@
 # 自己写的一些有用的组件
 
-## [scroll-bar组件](./scrollBar/scroll-bar.html)
+## [scroll-bar](./scrollBar/scroll-bar.html)
+
+## [bullet-screen](./bulletScreen/bullet-screen.html)
+
+## [countdown](./countDown/coutdown.js)
