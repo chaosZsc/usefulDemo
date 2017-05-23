@@ -4,4 +4,4 @@
 
 ## [bullet-screen](./bulletScreen/bullet-screen.html)
 
-## [countdown](./countDown/coutdown.js)
+## [countdown](./countDown/countdown.js)
